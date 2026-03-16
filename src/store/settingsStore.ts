@@ -1,4 +1,3 @@
-import { DEFAULT_PARAMETERS } from '@/utils/constants';
 import type { SettingsState } from '@/types/ui';
 import { readJsonStorage, writeJsonStorage } from '@/utils/storage';
 
@@ -6,12 +5,11 @@ const STORAGE_KEY = 'depthsplat-settings';
 
 const defaultSettings: SettingsState = {
   backendBaseUrl: 'http://127.0.0.1:8012',
-  defaultParameters: {
-    numInferenceSteps: DEFAULT_PARAMETERS.numInferenceSteps,
-    guidanceScale: DEFAULT_PARAMETERS.guidanceScale,
-    outputFps: DEFAULT_PARAMETERS.outputFps,
-    exportDepthMap: DEFAULT_PARAMETERS.exportDepthMap,
-    outputFormat: DEFAULT_PARAMETERS.outputFormat,
+  taskOptions: {
+    testChunkInterval: true,
+    saveVideo: true,
+    computeScores: false,
+    exportDepthMap: true,
   },
   preferences: {
     autoScrollLogs: true,
@@ -19,5 +17,20 @@ const defaultSettings: SettingsState = {
   },
 };
 
-export const getSettings = (): SettingsState => readJsonStorage(STORAGE_KEY, defaultSettings);
+export const getSettings = (): SettingsState => {
+  const stored = readJsonStorage<Partial<SettingsState>>(STORAGE_KEY, defaultSettings);
+
+  return {
+    backendBaseUrl: stored.backendBaseUrl ?? defaultSettings.backendBaseUrl,
+    taskOptions: {
+      ...defaultSettings.taskOptions,
+      ...(stored.taskOptions ?? {}),
+    },
+    preferences: {
+      ...defaultSettings.preferences,
+      ...(stored.preferences ?? {}),
+    },
+  };
+};
+
 export const saveSettings = (value: SettingsState) => writeJsonStorage(STORAGE_KEY, value);

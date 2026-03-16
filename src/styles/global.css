@@ -31,21 +31,32 @@ html, body, #root {
   padding: 24px;
 }
 
-.image-wall {
+.image-wall,
+.preview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 12px;
 }
 
-.image-wall .ant-image {
+.preview-grid-large {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.image-wall .ant-image,
+.preview-grid .ant-image {
   width: 100%;
 }
 
-.image-wall img {
+.image-wall img,
+.preview-grid img {
   width: 100%;
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.preview-grid-large img {
+  height: 180px;
 }
 
 .result-video {
@@ -55,10 +66,33 @@ html, body, #root {
   background: #000;
 }
 
+.large-video {
+  min-height: 280px;
+}
+
+.video-placeholder {
+  min-height: 280px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
 .log-row {
   display: flex;
   gap: 8px;
   align-items: flex-start;
   width: 100%;
   flex-wrap: wrap;
+}
+
+
+.full-height-card {
+  height: 100%;
+}
+
+.full-height-card .ant-card-body {
+  height: calc(100% - 57px);
 }

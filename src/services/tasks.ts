@@ -1,6 +1,7 @@
-﻿import type {
+import type {
   CreateTaskFormData,
   CreateTaskResponse,
+  PresetScriptItem,
   SampleItem,
   TaskDetail,
   TaskLogsResponse,
@@ -14,11 +15,17 @@ export const taskApi = {
     return response.items ?? [];
   },
 
+  getPresets: async () => {
+    const response = await request<{ items: PresetScriptItem[] }>('/presets');
+    return response.items ?? [];
+  },
+
   createTask: async (payload: CreateTaskFormData) => {
     const formData = new FormData();
 
     if (payload.sampleId) formData.append('sampleId', payload.sampleId);
-    formData.append('parameters', JSON.stringify(payload.parameters));
+    if (payload.presetId) formData.append('presetId', payload.presetId);
+    formData.append('options', JSON.stringify(payload.options));
     payload.images.forEach((file) => formData.append('images', file));
 
     return request<CreateTaskResponse>('/tasks', {
@@ -32,4 +39,3 @@ export const taskApi = {
   getTaskLogs: (taskId: string) => request<TaskLogsResponse>(`/tasks/${taskId}/logs`),
   getTaskResult: (taskId: string) => request<TaskResult>(`/tasks/${taskId}/result`),
 };
-

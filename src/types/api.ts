@@ -16,22 +16,32 @@ export interface SampleItem {
   thumbnailUrl?: string;
   category?: string;
   tags?: string[];
+  inputImages?: string[];
+  previewImages?: string[];
 }
 
-export interface DepthSplatParameters {
-  numInferenceSteps: number;
-  guidanceScale: number;
-  seed?: number;
-  outputFps: number;
+export interface PresetScriptItem {
+  id: string;
+  name: string;
+  description?: string;
+  checkpoint?: string;
+  contextViews?: number;
+  imageShape?: [number, number] | number[];
+  sampleId?: string;
+}
+
+export interface TaskOptions {
+  testChunkInterval: boolean;
+  saveVideo: boolean;
+  computeScores: boolean;
   exportDepthMap: boolean;
-  outputFormat: 'mp4' | 'webm';
-  extra?: Record<string, string | number | boolean | null>;
 }
 
 export interface CreateTaskFormData {
   sampleId?: string;
+  presetId?: string;
   images: File[];
-  parameters: DepthSplatParameters;
+  options: TaskOptions;
 }
 
 export interface CreateTaskResponse {
@@ -58,13 +68,15 @@ export interface TaskDetail {
   id: string;
   sampleId?: string;
   sampleName?: string;
+  presetId?: string;
+  presetName?: string;
   state: BackendTaskState;
   stage?: string;
   createdAt?: string;
   updatedAt?: string;
   submittedAt?: string;
   timings?: TaskStageTiming;
-  parameters?: Partial<DepthSplatParameters>;
+  parameters?: Record<string, string | number | boolean | null | undefined>;
   inputImages?: string[];
   error?: TaskErrorSummary;
 }
@@ -95,7 +107,7 @@ export interface TaskResult {
   depthImages?: string[];
   previewImages?: string[];
   metrics?: TaskMetric[];
-  parameters?: Partial<DepthSplatParameters>;
+  parameters?: Record<string, string | number | boolean | null | undefined>;
   notes?: string;
 }
 

@@ -7,3 +7,10 @@ export function useSamples() {
     queryFn: taskApi.getSamples,
   });
 }
+
+export function usePresets() {
+  return useQuery({
+    queryKey: ['presets'],
+    queryFn: taskApi.getPresets,
+  });
+}

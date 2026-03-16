@@ -1,4 +1,4 @@
-import { Card, Empty, Radio, Space, Spin, Typography } from 'antd';
+import { Card, Empty, Select, Space, Spin, Typography } from 'antd';
 import type { SampleItem } from '@/types/api';
 
 interface Props {
@@ -15,20 +15,25 @@ export function SampleSelector({ samples, loading, value, onChange }: Props) {
         {!samples?.length ? (
           <Empty description={'\u540e\u7aef\u672a\u8fd4\u56de\u6837\u4f8b\u6570\u636e'} />
         ) : (
-          <Radio.Group value={value} onChange={(event) => onChange(event.target.value)} style={{ width: '100%' }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {samples.map((sample) => (
-                <Card.Grid key={sample.id} style={{ width: '100%', cursor: 'pointer' }} onClick={() => onChange(sample.id)}>
-                  <Radio value={sample.id}>
-                    <Space direction="vertical" size={0}>
-                      <Typography.Text strong>{sample.name}</Typography.Text>
-                      <Typography.Text type="secondary">{sample.description || sample.id}</Typography.Text>
-                    </Space>
-                  </Radio>
-                </Card.Grid>
-              ))}
-            </Space>
-          </Radio.Group>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Select
+              showSearch
+              allowClear
+              placeholder={'\u8bf7\u9009\u62e9\u6837\u4f8b'}
+              value={value}
+              onChange={onChange}
+              optionFilterProp="label"
+              options={samples.map((sample) => ({
+                value: sample.id,
+                label: sample.name,
+              }))}
+            />
+            {value && (
+              <Typography.Text type="secondary">
+                {samples.find((sample) => sample.id === value)?.description ?? '\u5df2\u9009\u62e9\u6837\u4f8b'}
+              </Typography.Text>
+            )}
+          </Space>
         )}
       </Spin>
     </Card>
