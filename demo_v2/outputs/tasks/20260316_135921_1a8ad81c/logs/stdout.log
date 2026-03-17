@@ -1,0 +1,8 @@
+[36mSaving outputs to /root/autodl-tmp/demo_v2/outputs/tasks/20260316_135921_1a8ad81c/meta/depthsplat_output.[39m
+[2026-03-16 21:59:30,525][dinov2][INFO] - using MLP layer as FFN
+Setting up [LPIPS] perceptual loss: trunk [vgg], v[0.1], spatial [off]
+Loading model from: /root/miniconda3/envs/depthsplat/lib/python3.10/site-packages/lpips/weights/v0.1/vgg.pth
+[36mLoaded pretrained weights: /root/depthsplat/pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth[39m
+Testing: |          | 0/? [00:00<?, ?it/s]Testing:   0%|          | 0/1 [00:00<?, ?it/s]Testing DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]Testing DataLoader 0: 100%|██████████| 1/1 [00:08<00:00,  0.12it/s]Testing DataLoader 0: 100%|██████████| 1/1 [00:08<00:00,  0.12it/s]
+encoder: 1 calls, avg. 1.007211446762085 seconds per call
+decoder: 279 calls, avg. 0.006807860507759997 seconds per call

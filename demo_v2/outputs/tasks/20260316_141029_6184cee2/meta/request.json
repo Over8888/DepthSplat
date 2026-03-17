@@ -1,0 +1,26 @@
+{
+  "preset": "re10k_6view_512x960",
+  "sample_id": "re10k_6view_512x960:000c3ab189999a83",
+  "scene_key": "000c3ab189999a83",
+  "checkpoint": "depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth",
+  "image_shape": [
+    512,
+    960
+  ],
+  "num_context_views": 6,
+  "images": [],
+  "options": {
+    "testChunkInterval": true,
+    "saveVideo": true,
+    "computeScores": false,
+    "exportDepthMap": true
+  },
+  "defaults": {
+    "checkpoint": "depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth",
+    "num_context_views": 6,
+    "image_shape": [
+      512,
+      960
+    ]
+  }
+}

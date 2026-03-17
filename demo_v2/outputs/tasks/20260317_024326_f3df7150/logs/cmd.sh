@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /root/depthsplat
+export SKVIDEO_FFMPEG_PATH=/usr/bin
+/root/miniconda3/envs/depthsplat/bin/python -m src.main +experiment=re10k 'dataset.roots=[/root/autodl-tmp/demo_v2/outputs/tasks/20260317_024326_f3df7150/input/dataset]' dataset.view_sampler.index_path=/root/autodl-tmp/demo_v2/outputs/tasks/20260317_024326_f3df7150/meta/evaluation_index.json dataset/view_sampler=evaluation dataset.view_sampler.num_context_views=2 checkpointing.pretrained_model=/root/depthsplat/pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth mode=test test.save_video=true test.save_depth=true test.save_depth_concat_img=true test.compute_scores=false test.save_image=false test.save_gt_image=false test.save_input_images=false output_dir=/root/autodl-tmp/demo_v2/outputs/tasks/20260317_024326_f3df7150/meta/depthsplat_output dataset.test_chunk_interval=100 model.encoder.num_scales=2 model.encoder.upsample_factor=2 model.encoder.lowest_feature_resolution=4 model.encoder.monodepth_vit_type=vitl data_loader.test.num_workers=0 wandb.mode=disabled trainer.num_sanity_val_steps=0 dataset.skip_bad_shape=false

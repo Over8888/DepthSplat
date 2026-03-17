@@ -1,0 +1,13 @@
+{
+  "queued_at": "2026-03-17T03:13:52.022665Z",
+  "preparing_started_at": "2026-03-17T03:13:52.024172Z",
+  "running_started_at": "2026-03-17T03:13:52.491596Z",
+  "postprocessing_started_at": "2026-03-17T03:16:19.949150Z",
+  "finished_at": "2026-03-17T03:16:19.953954Z",
+  "startup_seconds": 0.0015,
+  "model_load_seconds": 146.6622201376953,
+  "data_prep_seconds": 0.464,
+  "forward_seconds": 0.7953338623046875,
+  "save_outputs_seconds": null,
+  "total_seconds": 147.9313
+}
