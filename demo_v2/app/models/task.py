@@ -18,6 +18,7 @@ class TimingInfo(BaseModel):
     model_load_seconds: float | None = None
     data_prep_seconds: float | None = None
     forward_seconds: float | None = None
+    splat_conversion_seconds: float | None = None
     save_outputs_seconds: float | None = None
     total_seconds: float | None = None
 
@@ -35,7 +36,7 @@ class CancelMetadata(BaseModel):
 
 class RequestMetadata(BaseModel):
     preset: str
-    sample_id: str
+    sample_id: str | None = None
     scene_key: str
     checkpoint: str
     image_shape: list[int]
@@ -60,6 +61,9 @@ class ResultMetadata(BaseModel):
     metrics: dict[str, Any] = Field(default_factory=dict)
     error_summary: str | None = None
     cancel: CancelMetadata | None = None
+    splat_url: str | None = None
+    splat_path: str | None = None
+    conversion_error: str | None = None
 
 
 class ProcessInfo(BaseModel):

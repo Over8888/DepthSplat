@@ -4,7 +4,6 @@ import json
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from typing import Iterable
 
 import torch
 from PIL import Image
@@ -100,6 +99,28 @@ class SampleService:
             "input_preview_files": preview_files,
             "context_indices": context_indices,
             "target_count": len(target_indices),
+        }
+
+    def materialize_uploaded_images(self, task_dir: Path, image_paths: list[str], scene_key: str) -> dict:
+        preview_dir = task_dir / "input" / "preview"
+        preview_dir.mkdir(parents=True, exist_ok=True)
+        preview_files: list[str] = []
+        for order, image_path in enumerate(image_paths):
+            src = Path(image_path)
+            if not src.exists():
+                continue
+            suffix = src.suffix.lower() or ".png"
+            filename = f"upload_{order:02d}{suffix}"
+            image = Image.open(src).convert("RGB")
+            image.save(preview_dir / filename)
+            preview_files.append(f"input/preview/{filename}")
+        return {
+            "scene_key": scene_key,
+            "dataset_root": None,
+            "evaluation_index_path": None,
+            "input_preview_files": preview_files,
+            "context_indices": list(range(len(preview_files))),
+            "target_count": 0,
         }
 
     def _resolve_eval_indices(self, preset: PresetConfig, scene_key: str) -> tuple[list[int], list[int]]:

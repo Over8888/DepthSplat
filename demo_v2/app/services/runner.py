@@ -69,6 +69,7 @@ class Runner:
             f"test.save_video={'true' if save_video else 'false'}",
             f"test.save_depth={'true' if export_depth_map else 'false'}",
             f"test.save_depth_concat_img={'true' if export_depth_map else 'false'}",
+            "test.save_gaussian=true",
             f"test.compute_scores={'true' if compute_scores else 'false'}",
             "test.save_image=false",
             "test.save_gt_image=false",

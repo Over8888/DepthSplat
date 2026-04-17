@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import threading
 import time
 import uuid
@@ -9,7 +10,7 @@ from pathlib import Path
 
 from app.config import PresetConfig, Settings
 from app.models.enums import ALLOWED_TRANSITIONS, TERMINAL_STATES, TaskState
-from app.models.task import CancelMetadata, ProcessInfo, RequestMetadata, ResultMetadata, TaskRecord, TimingInfo
+from app.models.task import CancelMetadata, ProcessInfo, RequestMetadata, TaskRecord, TimingInfo
 from app.schemas.tasks import CreateTaskRequest
 from app.services.result_builder import ResultBuilder
 from app.services.runner import Runner
@@ -53,14 +54,20 @@ class TaskManager:
             self._shutdown = True
             self._cond.notify_all()
 
-    def create_task(self, request: CreateTaskRequest) -> TaskRecord:
+    def create_task(self, request: CreateTaskRequest, upload_temp_paths: list[str] | None = None) -> TaskRecord:
         preset_name = request.preset_id or self.settings.default_preset
         preset = self._preset(preset_name)
-        sample = self.sample_service.get_sample(request.sample_id)
-        if sample.preset != preset_name:
-            raise ValueError("sample_id does not match preset")
+        sample = None
+        if request.sample_id:
+            sample = self.sample_service.get_sample(request.sample_id)
+            if sample.preset != preset_name:
+                raise ValueError("sample_id does not match preset")
+        elif not upload_temp_paths:
+            raise ValueError("images is required when sampleId is omitted")
+
         task_id = self._new_task_id()
         self.storage.create_task_layout(task_id)
+        stored_images = self._persist_uploaded_images(task_id, upload_temp_paths or [], request.images)
         now = datetime.now(timezone.utc)
         task = TaskRecord(
             id=task_id,
@@ -71,13 +78,17 @@ class TaskManager:
             request=RequestMetadata(
                 preset=preset.name,
                 sample_id=request.sample_id,
-                scene_key=sample.scene_key,
+                scene_key=sample.scene_key if sample is not None else f"upload_{task_id}",
                 checkpoint=preset.checkpoint_path.name,
                 image_shape=list(preset.image_shape),
                 num_context_views=preset.num_context_views,
-                images=request.images,
+                images=stored_images,
                 options=request.options,
-                defaults=sample.defaults,
+                defaults=sample.defaults if sample is not None else {
+                    "checkpoint": preset.checkpoint_path.name,
+                    "num_context_views": preset.num_context_views,
+                    "image_shape": list(preset.image_shape),
+                },
             ),
             timing=TimingInfo(queued_at=now),
         )
@@ -92,7 +103,7 @@ class TaskManager:
                 "task_id": task_id,
                 "preset": preset.name,
                 "sample_id": request.sample_id,
-                "image_count": len(request.images),
+                "image_count": len(stored_images),
                 "options": request.options,
             },
         )
@@ -193,10 +204,22 @@ class TaskManager:
 
         task_dir = self.storage.task_dir(task_id)
         prep_start = time.monotonic()
-        materialized = self.sample_service.materialize_sample(task_dir, task.request.sample_id, preset.name)
+        if task.request.sample_id:
+            materialized = self.sample_service.materialize_sample(task_dir, task.request.sample_id, preset.name)
+        else:
+            materialized = self.sample_service.materialize_uploaded_images(task_dir, task.request.images, task.request.scene_key)
         data_prep_seconds = time.monotonic() - prep_start
         task.timing.data_prep_seconds = round(data_prep_seconds, 4)
         task.timing.startup_seconds = self._duration(task.timing.queued_at, task.timing.preparing_started_at)
+        self.storage.save_task(task)
+
+        if not task.request.sample_id:
+            task.error_summary = "Manual upload task creation is supported, but raw uploaded images cannot be sent to DepthSplat inference without dataset/camera metadata."
+            task.timing.finished_at = datetime.now(timezone.utc)
+            task.timing.total_seconds = self._duration(task.timing.queued_at, task.timing.finished_at)
+            task = self._transition(task, TaskState.failed)
+            self.storage.save_task(task)
+            return
 
         output_dir = task_dir / "meta" / "depthsplat_output"
         command = self.runner.build_command(
@@ -294,6 +317,29 @@ class TaskManager:
 
     def _new_task_id(self) -> str:
         return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:8]
+
+    def _persist_uploaded_images(self, task_id: str, upload_temp_paths: list[str], image_names: list[str]) -> list[str]:
+        if not upload_temp_paths:
+            return []
+        input_dir = self.storage.task_dir(task_id) / "input"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        stored: list[str] = []
+        for index, temp_path in enumerate(upload_temp_paths):
+            src = Path(temp_path)
+            suffix = src.suffix.lower()
+            if not suffix:
+                original_name = image_names[index] if index < len(image_names) else ""
+                if "." in original_name:
+                    suffix = "." + original_name.rsplit(".", 1)[-1].lower()
+            filename = f"upload_{index:02d}{suffix or '.png'}"
+            dst = input_dir / filename
+            shutil.copy2(src, dst)
+            stored.append(str(dst))
+            try:
+                src.unlink(missing_ok=True)
+            except Exception:
+                pass
+        return stored
 
     @staticmethod
     def _duration(start: datetime | None, end: datetime | None) -> float | None:
