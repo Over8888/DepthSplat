@@ -14,7 +14,6 @@ COMMON_ARGS=(
   model.encoder.upsample_factor=2
   model.encoder.lowest_feature_resolution=4
   model.encoder.monodepth_vit_type=vitb
-  model.encoder.tome.enabled=false
   checkpointing.pretrained_model=pretrained/depthsplat-gs-base-re10k-256x256-view2-ca7b6795.pth
   mode=test
   test.compute_scores=true

@@ -14,7 +14,6 @@ from .matching import warp_with_pose_depth_candidates
 from .utils import mv_feature_add_position
 from .dpt_head import DPTHead
 from .ldm_unet.unet import UNetModel, AttentionBlock
-from .tome_adapter import ToMePatchError, apply_tome_to_dinov2
 from einops import rearrange
 
 
@@ -62,10 +61,12 @@ class MultiViewUniMatch(nn.Module):
         unet_num_res_blocks=1,
         unet_attn_resolutions=[4],
         grid_sample_disable_cudnn=False,
-        tome_cfg=None,
+        cost_volume_confidence=False,
         **kwargs,
     ):
         super(MultiViewUniMatch, self).__init__()
+
+        self.cost_volume_confidence = cost_volume_confidence
 
         # CNN
         self.feature_channels = feature_channels
@@ -119,23 +120,6 @@ class MultiViewUniMatch(nn.Module):
         )
 
         del self.pretrained.mask_token  # unused
-
-        if tome_cfg is not None and getattr(tome_cfg, "enabled", False):
-            try:
-                self.pretrained = apply_tome_to_dinov2(
-                    self.pretrained,
-                    tome_root=tome_cfg.tome_path,
-                    r=tome_cfg.r,
-                    prop_attn=tome_cfg.prop_attn,
-                    inference_only=tome_cfg.inference_only,
-                    trace_source=tome_cfg.trace_source,
-                )
-                print(
-                    f"[INFO] Enabled ToMe for DINOv2 monodepth encoder "
-                    f"(r={tome_cfg.r}, prop_attn={tome_cfg.prop_attn})"
-                )
-            except ToMePatchError as exc:
-                raise RuntimeError(f"Failed to enable ToMe for DINOv2: {exc}") from exc
 
         if self.num_scales > 1:
             # generate multi-scale features
@@ -556,6 +540,13 @@ class MultiViewUniMatch(nn.Module):
                 (ref_features.unsqueeze(-3).unsqueeze(1) * warped_tgt_features).sum(2)
                 / (c**0.5)
             ).mean(1)
+
+            if self.cost_volume_confidence and scale_idx == self.num_scales - 1:
+                cost_max = cost_volume.max(dim=1, keepdim=True)[0]
+                cost_mean = cost_volume.mean(dim=1, keepdim=True)
+                pmr = cost_max / (cost_mean + 1e-8)
+                depth_confidence_lowres = 1.0 - 1.0 / pmr.clamp(min=1.0)
+                results_dict["depth_confidence"] = depth_confidence_lowres
 
             # regressor
             features_cnn = features_list_cnn[scale_idx]  # [BV, C, H, W]

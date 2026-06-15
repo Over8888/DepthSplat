@@ -22,16 +22,6 @@ from .unimatch.dpt_head import DPTHead
 
 
 @dataclass
-class ToMeCfg:
-    enabled: bool
-    r: int
-    prop_attn: bool
-    inference_only: bool
-    trace_source: bool
-    tome_path: str
-
-
-@dataclass
 class EncoderDepthSplatCfg:
     name: Literal["depthsplat"]
     d_feature: int
@@ -72,9 +62,14 @@ class EncoderDepthSplatCfg:
     # only depth
     train_depth_only: bool
 
+    # cost volume confidence (PMR)
+    cost_volume_confidence: bool
+
+    # PMR-guided depth smoothing
+    pmr_guided_smooth: bool
+
     # monodepth config
     monodepth_vit_type: str
-    tome: ToMeCfg
 
     # multi-view matching
     local_mv_match: int
@@ -92,7 +87,7 @@ class EncoderDepthSplat(Encoder[EncoderDepthSplatCfg]):
             vit_type=cfg.monodepth_vit_type,
             unet_channels=cfg.depth_unet_channels,
             grid_sample_disable_cudnn=cfg.grid_sample_disable_cudnn,
-            tome_cfg=cfg.tome,
+            cost_volume_confidence=cfg.cost_volume_confidence,
         )
 
         if self.cfg.train_depth_only:
@@ -189,6 +184,32 @@ class EncoderDepthSplat(Encoder[EncoderDepthSplatCfg]):
         # [B, V, H, W]
         depth = depth_preds[-1]
 
+        if self.cfg.cost_volume_confidence:
+            conf_lowres = results_dict.get('depth_confidence')
+            if conf_lowres is not None:
+                depth_confidence = F.interpolate(
+                    conf_lowres, size=depth.shape[-2:],
+                    mode='bilinear', align_corners=True)
+            else:
+                depth_confidence = None
+        else:
+            depth_confidence = None
+
+        if self.cfg.pmr_guided_smooth and depth_confidence is not None:
+            depth_flat = rearrange(depth, "b v h w -> (b v) 1 h w")
+            conf = depth_confidence
+            mask = (conf >= 0.20).float()
+            weight = conf * mask
+            kernel = torch.ones(1, 1, 3, 3, device=depth.device)
+            wsum = F.conv2d(depth_flat * weight, kernel, padding=1)
+            norm = F.conv2d(weight, kernel, padding=1)
+            no_valid = (norm < 1e-6)
+            norm_safe = norm.clamp(min=1e-8)
+            smooth = wsum / norm_safe
+            depth_flat = torch.where(no_valid, depth_flat, smooth)
+            depth = rearrange(
+                depth_flat, "(b v) 1 h w -> b v h w", b=b, v=v)
+
         if self.cfg.train_depth_only:
             # convert format
             # [B, V, H*W, 1, 1]
@@ -217,7 +238,8 @@ class EncoderDepthSplat(Encoder[EncoderDepthSplatCfg]):
 
             return {
                 "gaussians": None,
-                "depths": depths
+                "depths": depths,
+                "depth_confidence": depth_confidence,
             }
 
         # features [BV, C, H, W]
@@ -385,7 +407,8 @@ class EncoderDepthSplat(Encoder[EncoderDepthSplatCfg]):
 
             return {
                 "gaussians": gaussians,
-                "depths": depths
+                "depths": depths,
+                "depth_confidence": depth_confidence,
             }
 
         return gaussians

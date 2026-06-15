@@ -23,7 +23,7 @@ def viz_depth_tensor(disp, return_numpy=False, colormap="plasma"):
     # visualize inverse depth
     assert isinstance(disp, torch.Tensor)
 
-    disp = disp.numpy()
+    disp = disp.detach().numpy()
     vmax = np.percentile(disp, 95)
     normalizer = mpl.colors.Normalize(vmin=disp.min(), vmax=vmax)
     mapper = cm.ScalarMappable(norm=normalizer, cmap=colormap)

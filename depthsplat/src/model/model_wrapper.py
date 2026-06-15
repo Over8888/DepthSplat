@@ -194,6 +194,9 @@ class ModelWrapper(LightningModule):
 
         if isinstance(gaussians, dict):
             pred_depths = gaussians["depths"]
+            if "depth" in batch["context"]:
+                depth_gt = batch["context"]["depth"]
+            depth_confidence = gaussians.get("depth_confidence")
             gaussians = gaussians["gaussians"]
 
         supervise_intermediate_depth = False
@@ -397,6 +400,8 @@ class ModelWrapper(LightningModule):
         assert b == 1
 
         pred_depths = None
+        depth_confidence = None
+        depth_confidence = None
 
         # save input views for visualization
         if self.test_cfg.save_input_images:
@@ -426,6 +431,7 @@ class ModelWrapper(LightningModule):
 
             if isinstance(gaussians, dict):
                 pred_depths = gaussians["depths"]
+                depth_confidence = gaussians.get("depth_confidence")
                 if "depth" in batch["context"]:
                     depth_gt = batch["context"]["depth"]
                 gaussians = gaussians["gaussians"]
@@ -610,6 +616,8 @@ class ModelWrapper(LightningModule):
                         "psnr": psnr_value,
                         "ssim": ssim_value,
                         "lpips": lpips_value,
+                        "mean_pmr": depth_confidence.mean().item()
+                        if depth_confidence is not None else float('nan'),
                     }
                 )
 
@@ -642,7 +650,7 @@ class ModelWrapper(LightningModule):
             with (out_dir / "scores_per_scene.json").open("w") as f:
                 json.dump(self.test_scene_outputs, f, indent=2)
             with (out_dir / "scores_per_scene.csv").open("w", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=["scene", "psnr", "ssim", "lpips"])
+                writer = csv.DictWriter(f, fieldnames=["scene", "psnr", "ssim", "lpips", "mean_pmr"])
                 writer.writeheader()
                 writer.writerows(self.test_scene_outputs)
             self.test_scene_outputs.clear()

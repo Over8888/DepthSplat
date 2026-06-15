@@ -166,3 +166,5 @@ pretrained
 outputs
 output
 checkpoints
+DL3DV-10K-Benchmark/
+__pycache__/

@@ -55,7 +55,6 @@ def build_command(scene: str, output_dir: Path, extra_args: list[str]) -> list[s
         "model.encoder.upsample_factor=2",
         "model.encoder.lowest_feature_resolution=4",
         "model.encoder.monodepth_vit_type=vitb",
-        "model.encoder.tome.enabled=false",
         f"checkpointing.pretrained_model={CHECKPOINT}",
         "mode=test",
         "test.compute_scores=true",

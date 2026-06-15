@@ -193,7 +193,6 @@ def main() -> int:
         handle.write("- 数据集: RE10K 2-view evaluation\n")
         handle.write("- 基线 checkpoint: `depthsplat-gs-base-re10k-256x256-view2-ca7b6795.pth`\n")
         handle.write("- 基线设置: `num_depth_candidates=128`\n")
-        handle.write("- ToMe: 关闭\n")
         handle.write("- 消融组: 相机平移噪声、相机旋转噪声、`num_depth_candidates`\n\n")
         handle.write("## 关键指标\n\n")
         handle.write(f"- Baseline PSNR: {baseline_psnr:.4f}\n")

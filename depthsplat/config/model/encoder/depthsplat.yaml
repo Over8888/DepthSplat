@@ -32,13 +32,6 @@ local_mv_match: 2
 
 # monodepth
 monodepth_vit_type: vits
-tome:
-  enabled: false
-  r: 0
-  prop_attn: true
-  inference_only: true
-  trace_source: false
-  tome_path: /root/ToMe-main
 
 # return depth
 supervise_intermediate_depth: true
@@ -60,3 +53,9 @@ gaussian_regressor_channels: 64
 
 # only depth
 train_depth_only: false
+
+# cost volume confidence (PMR)
+cost_volume_confidence: true
+
+# PMR-guided depth smoothing
+pmr_guided_smooth: true
