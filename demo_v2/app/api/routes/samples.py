@@ -30,7 +30,23 @@ def get_samples(request: Request, preset: str | None = Query(None)) -> SamplesRe
         default_preset=manager.settings.default_preset,
         presets=preset_items,
         items=[
-            SampleItem(id=item.id, preset=item.preset, scene_key=item.scene_key, label=item.label, defaults=item.defaults)
+            SampleItem(
+                id=item.id,
+                name=item.name or item.label,
+                description=item.description,
+                thumbnail_url=item.thumbnail_url,
+                category=item.category,
+                tags=item.tags,
+                input_images=item.input_images,
+                preview_images=item.preview_images,
+                scene_number=item.scene_number or item.scene_key,
+                input_view_count=item.input_view_count,
+                target_view_count=item.target_view_count,
+                preset=item.preset,
+                scene_key=item.scene_key,
+                label=item.label,
+                defaults=item.defaults,
+            )
             for item in items
         ],
     )

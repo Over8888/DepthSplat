@@ -3,14 +3,15 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime, timezone
 from typing import Any
+
+from app.utils.timezone import now_local
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "ts": datetime.now(timezone.utc).isoformat(),
+            "ts": now_local().isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

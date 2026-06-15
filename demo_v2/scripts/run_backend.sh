@@ -4,4 +4,5 @@ set -euo pipefail
 cd /root/autodl-tmp/demo_v2
 HOST="${DEPTHSPLAT_V3_HOST:-0.0.0.0}"
 PORT="${DEPTHSPLAT_V3_PORT:-8012}"
+export DEPTHSPLAT_VGGT_CHECKPOINT="${DEPTHSPLAT_VGGT_CHECKPOINT:-/root/autodl-tmp/model.pt}"
 python -m uvicorn app.main:app --host "${HOST}" --port "${PORT}"

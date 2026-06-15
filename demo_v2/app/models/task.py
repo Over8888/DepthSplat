@@ -42,8 +42,16 @@ class RequestMetadata(BaseModel):
     image_shape: list[int]
     num_context_views: int
     images: list[str] = Field(default_factory=list)
+    video: str | None = None
+    pose_file: str | None = None
+    pose_format: str | None = None
+    context_indices: list[int] = Field(default_factory=list)
+    target_indices: list[int] = Field(default_factory=list)
     options: dict[str, Any] = Field(default_factory=dict)
     defaults: dict[str, Any] = Field(default_factory=dict)
+    resolved_script: str | None = None
+    input_view_count: int | None = None
+    quality_mode: str | None = None
 
 
 class ResultMetadata(BaseModel):
@@ -61,6 +69,13 @@ class ResultMetadata(BaseModel):
     metrics: dict[str, Any] = Field(default_factory=dict)
     error_summary: str | None = None
     cancel: CancelMetadata | None = None
+    rendered_images: list[str] = Field(default_factory=list)
+    gt_images: list[str] = Field(default_factory=list)
+    error_images: list[str] = Field(default_factory=list)
+    comparison_concat_image: str | None = None
+    images_zip_url: str | None = None
+    scores: dict[str, Any] = Field(default_factory=dict)
+    camera_params_url: str | None = None
     splat_url: str | None = None
     splat_path: str | None = None
     conversion_error: str | None = None

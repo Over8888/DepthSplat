@@ -8,11 +8,14 @@ from app.api.routes.presets import router as presets_router
 from app.api.routes.samples import router as samples_router
 from app.api.routes.tasks import router as tasks_router
 from app.config import get_settings
+from app.services.demo_inference import DemoInference
 from app.services.result_builder import ResultBuilder
 from app.services.runner import Runner
 from app.services.sample_service import SampleService
 from app.services.storage import FilesystemStorage
 from app.services.task_manager import TaskManager
+from app.services.ttt3r_service import TTT3RService
+from app.services.vggt_service import VGGTService
 from app.utils.logging import get_logger, setup_logging
 
 
@@ -21,10 +24,13 @@ def create_app() -> FastAPI:
     logger = get_logger(__name__)
     settings = get_settings()
     storage = FilesystemStorage(settings)
-    sample_service = SampleService(settings)
+    vggt_service = VGGTService(settings)
+    ttt3r_service = TTT3RService(settings)
+    sample_service = SampleService(settings, storage, vggt_service, ttt3r_service)
     runner = Runner(settings)
     result_builder = ResultBuilder(settings, storage)
-    task_manager = TaskManager(settings, storage, sample_service, runner, result_builder)
+    demo_inference = DemoInference(settings)
+    task_manager = TaskManager(settings, storage, sample_service, runner, result_builder, demo_inference)
     task_manager.start()
 
     app = FastAPI(title="DepthSplat v3 Linux Backend", version="3.0.0")

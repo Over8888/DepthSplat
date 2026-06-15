@@ -1,10 +1,22 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class SampleItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str
+    name: str | None = None
+    description: str | None = None
+    thumbnail_url: str | None = None
+    category: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    input_images: list[str] = Field(default_factory=list)
+    preview_images: list[str] = Field(default_factory=list)
+    scene_number: str | int | None = None
+    input_view_count: int | None = None
+    target_view_count: int | None = None
     preset: str
     scene_key: str
     label: str

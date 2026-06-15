@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
+from PIL import Image
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.config import PresetConfig, Settings
@@ -24,7 +26,7 @@ class FakeRunner:
         self.settings = settings
         self._active: dict[str, threading.Event] = {}
 
-    def build_command(self, preset, dataset_root, eval_index_path, output_dir):
+    def build_command(self, preset, dataset_root, eval_index_path, output_dir, options=None):
         return ["fake-depthsplat", preset.name, str(dataset_root), str(eval_index_path), str(output_dir)]
 
     def write_command_files(self, task_dir, preset, command):
@@ -32,6 +34,15 @@ class FakeRunner:
         logs.mkdir(parents=True, exist_ok=True)
         (logs / "cmd.txt").write_text(" ".join(command), encoding="utf-8")
         (logs / "cmd.sh").write_text("#!/usr/bin/env bash\n" + " ".join(command) + "\n", encoding="utf-8")
+
+    def build_script_env(self, **kwargs):
+        return {}
+
+    def write_script_command_files(self, task_dir, script_path, env_vars):
+        self.write_command_files(task_dir, None, ["bash", script_path])
+
+    def start_and_wait_script(self, task_id, script_path, env_vars, task_dir):
+        return self.start_and_wait(task_id, None, ["bash", str(script_path)], task_dir)
 
     def start_and_wait(self, task_id, preset, command, task_dir):
         stop = threading.Event()
@@ -53,6 +64,12 @@ class FakeRunner:
         depth_root = output_dir / "images" / "fake_scene" / "depth"
         depth_root.mkdir(parents=True, exist_ok=True)
         (depth_root / "000000.png").write_text("fake", encoding="utf-8")
+        color_root = output_dir / "images" / "fake_scene" / "color"
+        color_root.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (8, 8), (0, 0, 0)).save(color_root / "000000.png")
+        Image.new("RGB", (8, 8), (64, 0, 0)).save(color_root / "000000_gt.png")
+        Image.new("RGB", (8, 8), (20, 30, 40)).save(color_root / "000001.png")
+        Image.new("RGB", (8, 8), (20, 30, 40)).save(color_root / "000001_gt.png")
         (output_dir / "metrics").mkdir(parents=True, exist_ok=True)
         (output_dir / "metrics" / "benchmark.json").write_text('{"encoder": [0.1], "decoder": [0.2]}', encoding='utf-8')
         finished = datetime.now(timezone.utc)
@@ -80,7 +97,7 @@ class FakeSampleService(SampleService):
         preset_name, _ = sample_id.split(":", 1)
         return type("Sample", (), {"id": sample_id, "preset": preset_name, "scene_key": "fake_scene", "label": "fake_scene", "defaults": {}})
 
-    def materialize_sample(self, task_dir: Path, sample_id: str, preset_name: str):
+    def materialize_sample(self, task_dir: Path, sample_id: str, preset_name: str, input_view_count: int | None = None):
         (task_dir / "input" / "preview").mkdir(parents=True, exist_ok=True)
         (task_dir / "input" / "preview" / "context_00_000000.png").write_text("fake", encoding="utf-8")
         dataset_root = task_dir / "input" / "dataset"
@@ -93,11 +110,13 @@ class FakeSampleService(SampleService):
             "evaluation_index_path": eval_index_path,
             "input_preview_files": ["input/preview/context_00_000000.png"],
             "context_indices": [0],
+            "target_indices": [0],
             "target_count": 1,
         }
 
 
 def build_fake_settings(tmp_root: Path) -> Settings:
+    (tmp_root / "fake.sh").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
     preset = PresetConfig(
         name="fake",
         display_name="Fake",
@@ -115,10 +134,32 @@ def build_fake_settings(tmp_root: Path) -> Settings:
         depthsplat_python="python",
         host="127.0.0.1",
         port=8012,
+        cors_allow_origins=[],
         default_preset="fake",
         cancellation_grace_seconds=1.0,
         log_tail_lines=50,
+        vggt_root=tmp_root,
+        vggt_checkpoint_path=None,
+        vggt_model_id="fake",
+        vggt_load_resolution=1,
+        vggt_inference_resolution=1,
+        vggt_device=None,
+        camera_backend="ttt3r",
+        ttt3r_root=tmp_root,
+        ttt3r_python="python",
+        ttt3r_model_path=tmp_root / "fake_ttt3r.pth",
+        ttt3r_size=512,
+        ttt3r_model_update_type="ttt3r",
+        ttt3r_reset_interval=200,
+        ttt3r_device="cpu",
+        task_id_timezone="UTC",
+        demo_checkpoint_path=tmp_root / "fake_demo.pth",
+        demo_model_size="base",
+        demo_shim_patch_size=4,
+        demo_num_depth_candidates=128,
+        demo_sh_degree=2,
         presets={"fake": preset},
+        script_mapping={("sample", 1, "base"): "fake.sh"},
     )
 
 
@@ -142,6 +183,16 @@ def main() -> int:
             time.sleep(0.1)
         assert (storage.task_dir(task.id) / "logs" / "stdout.log").exists()
         assert storage.meta_path(task.id, "result.json").exists()
+        assert task.result is not None
+        assert task.result.error_images == [
+            f"/artifacts/{task.id}/error/000000_error.png",
+            f"/artifacts/{task.id}/error/000001_error.png",
+        ]
+        assert (storage.task_dir(task.id) / "error" / "000000_error.png").exists()
+        with Image.open(storage.task_dir(task.id) / "error" / "000000_error.png") as error_image:
+            assert error_image.getpixel((0, 0))[0] > error_image.getpixel((0, 0))[1]
+        with Image.open(storage.task_dir(task.id) / "error" / "000001_error.png") as identical_image:
+            assert identical_image.getpixel((0, 0)) == (20, 30, 40)
 
         cancel_task = manager.create_task(CreateTaskRequest(sample_id="fake:fake_scene", preset="fake"))
         time.sleep(0.2)
