@@ -1,26 +1,30 @@
 import { Button, Card, DatePicker, Select, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import type { BackendTaskState, SampleItem, TaskHistoryFilters, TaskHistoryItem } from '@/types/api';
+import type { BackendTaskState, PresetScriptItem, TaskHistoryFilters, TaskHistoryItem } from '@/types/api';
 import { TASK_STATE_LABELS } from '@/utils/constants';
 import { formatTimestamp } from '@/utils/task';
 
 interface Props {
   items: TaskHistoryItem[];
   filters: TaskHistoryFilters;
-  samples?: SampleItem[];
+  presets?: PresetScriptItem[];
   onFilterChange: (filters: TaskHistoryFilters) => void;
   onOpen: (taskId: string) => void;
 }
 
-export function TaskHistoryTable({ items, filters, samples, onFilterChange, onOpen }: Props) {
+const TEXT = {
+  uploadedVideo: '\u624b\u52a8\u4e0a\u4f20\u89c6\u9891',
+} as const;
+
+export function TaskHistoryTable({ items, filters, presets, onFilterChange, onOpen }: Props) {
   const columns: ColumnsType<TaskHistoryItem> = [
     { title: '\u4efb\u52a1 ID', dataIndex: 'id', key: 'id' },
     {
-      title: '\u6837\u4f8b',
+      title: '\u4efb\u52a1',
       dataIndex: 'sampleName',
       key: 'sampleName',
-      render: (_, record) => record.sampleName || record.sampleId || '\u6682\u65e0',
+      render: (_, record) => record.sampleName || record.sampleId || TEXT.uploadedVideo,
     },
     {
       title: '\u72b6\u6001',
@@ -56,22 +60,23 @@ export function TaskHistoryTable({ items, filters, samples, onFilterChange, onOp
             { value: 'success', label: '\u6210\u529f' },
             { value: 'failed', label: '\u5931\u8d25' },
             { value: 'cancelled', label: '\u5df2\u53d6\u6d88' },
+            { value: 'missing', label: '\u5df2\u4e22\u5931' },
           ]}
         />
         <Select
           allowClear
-          placeholder={'\u6309\u6837\u4f8b\u7b5b\u9009'}
-          value={filters.sampleId}
+          placeholder={'\u6309\u63a8\u7406\u811a\u672c\u7b5b\u9009'}
+          value={filters.presetId}
           style={{ width: 220 }}
-          onChange={(value) => onFilterChange({ ...filters, sampleId: value })}
-          options={samples?.map((sample) => ({ value: sample.id, label: sample.name }))}
+          onChange={(value) => onFilterChange({ ...filters, presetId: value })}
+          options={presets?.map((preset) => ({ value: preset.id, label: preset.name }))}
         />
         <DatePicker.RangePicker
           value={filters.timeRange ? [dayjs(filters.timeRange[0]), dayjs(filters.timeRange[1])] : null}
           onChange={(dates) =>
             onFilterChange({
               ...filters,
-              timeRange: dates ? [dates[0]!.toISOString(), dates[1]!.toISOString()] : undefined,
+              timeRange: dates ? [dates[0]!.startOf('day').toISOString(), dates[1]!.endOf('day').toISOString()] : undefined,
             })
           }
         />

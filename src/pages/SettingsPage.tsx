@@ -14,7 +14,7 @@ export function SettingsPage() {
   return (
     <>
       <Typography.Title level={3}>{'\u8bbe\u7f6e'}</Typography.Title>
-      <SettingsForm initialValues={settings} onSubmit={handleSubmit} />
+      <SettingsForm initialValues={settings} onSubmit={handleSubmit} onChange={updateSettings} />
     </>
   );
 }

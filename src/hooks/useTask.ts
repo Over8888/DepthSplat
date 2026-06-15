@@ -35,15 +35,16 @@ export function useTaskDetail(taskId?: string) {
   return query;
 }
 
-export function useTaskLogs(taskId?: string, enabled = true) {
+export function useTaskLogs(taskId?: string, taskState?: BackendTaskState, enabled = true) {
   return useQuery({
     queryKey: ['task-logs', taskId],
     queryFn: () => taskApi.getTaskLogs(taskId!),
     enabled: Boolean(taskId) && enabled,
-    refetchInterval: (queryInfo) => {
-      const taskState = queryInfo.client.getQueryData<{ state?: BackendTaskState }>(['task', taskId])?.state;
-      return taskState && !isTaskTerminal(taskState) ? 2000 : 10000;
+    refetchInterval: () => {
+      if (!taskState) return 2000;
+      return isTaskTerminal(taskState) ? false : 2000;
     },
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -66,5 +67,14 @@ export function useCancelTask(taskId?: string) {
       await queryClient.invalidateQueries({ queryKey: ['task-logs', taskId] });
       await queryClient.invalidateQueries({ queryKey: ['task-result', taskId] });
     },
+  });
+}
+
+export function useTaskInputImages(taskId?: string) {
+  return useQuery({
+    queryKey: ['task-input-images', taskId],
+    queryFn: () => taskApi.getTaskInputImages(taskId!),
+    enabled: Boolean(taskId),
+    retry: false,
   });
 }

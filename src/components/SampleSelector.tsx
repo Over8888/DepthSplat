@@ -1,4 +1,4 @@
-import { Card, Empty, Select, Space, Spin, Typography } from 'antd';
+import { Card, Empty, Select, Space, Spin } from 'antd';
 import type { SampleItem } from '@/types/api';
 
 interface Props {
@@ -7,6 +7,11 @@ interface Props {
   value?: string;
   onChange: (value?: string) => void;
 }
+
+const getSampleDisplayName = (sample: SampleItem) => {
+  const rawName = String(sample.sceneNumber ?? sample.name ?? sample.id);
+  return rawName.replace(/\s*\([^)]*\)\s*$/, '');
+};
 
 export function SampleSelector({ samples, loading, value, onChange }: Props) {
   return (
@@ -25,14 +30,9 @@ export function SampleSelector({ samples, loading, value, onChange }: Props) {
               optionFilterProp="label"
               options={samples.map((sample) => ({
                 value: sample.id,
-                label: sample.name,
+                label: getSampleDisplayName(sample),
               }))}
             />
-            {value && (
-              <Typography.Text type="secondary">
-                {samples.find((sample) => sample.id === value)?.description ?? '\u5df2\u9009\u62e9\u6837\u4f8b'}
-              </Typography.Text>
-            )}
           </Space>
         )}
       </Spin>

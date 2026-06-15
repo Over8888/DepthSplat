@@ -6,10 +6,11 @@ const STORAGE_KEY = 'depthsplat-settings';
 const defaultSettings: SettingsState = {
   backendBaseUrl: 'http://127.0.0.1:8012',
   taskOptions: {
-    testChunkInterval: true,
-    saveVideo: true,
-    computeScores: false,
-    exportDepthMap: true,
+    save_video: true,
+    save_image: true,
+    save_gt_image: false,
+    save_input_images: false,
+    compute_scores: false,
   },
   preferences: {
     autoScrollLogs: true,

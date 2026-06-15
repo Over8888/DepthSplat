@@ -29,6 +29,14 @@ const buildUrl = (path: string, query?: RequestOptions['query']) => {
   return url.toString();
 };
 
+export const resolveBackendUrl = (path?: string) => {
+  if (!path) return undefined;
+  if (/^(?:https?:|data:|blob:)/i.test(path)) return path;
+
+  const { backendBaseUrl } = getSettings();
+  return new URL(path, backendBaseUrl.endsWith('/') ? backendBaseUrl : `${backendBaseUrl}/`).toString();
+};
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { headers, query, ...init } = options;
   const response = await fetch(buildUrl(path, query), {

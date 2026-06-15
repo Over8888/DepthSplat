@@ -1,6 +1,6 @@
 html, body, #root {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
   font-family: Inter, system-ui, sans-serif;
   background: #f5f7fa;
 }
@@ -19,16 +19,36 @@ html, body, #root {
   font-weight: 600;
 }
 
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-sider {
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+}
+
+.app-main {
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .app-header {
   background: #fff;
   padding: 0 24px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #f0f0f0;
+  flex: 0 0 auto;
 }
 
 .app-content {
   padding: 24px;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .image-wall,
@@ -40,6 +60,13 @@ html, body, #root {
 
 .preview-grid-large {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.input-preview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: stretch;
+  align-items: start;
+  width: 100%;
 }
 
 .image-wall .ant-image,
@@ -57,6 +84,19 @@ html, body, #root {
 
 .preview-grid-large img {
   height: 180px;
+}
+
+.input-preview-grid .ant-image {
+  width: 100%;
+}
+
+.input-preview-grid img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
 .result-video {
@@ -95,4 +135,162 @@ html, body, #root {
 
 .full-height-card .ant-card-body {
   height: calc(100% - 57px);
+}
+
+.depth-grid-large {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.depth-grid-large .ant-image {
+  width: auto !important;
+  max-width: 100%;
+  flex-shrink: 1;
+}
+
+.depth-grid-large img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.result-left-card {
+  flex: 1;
+  min-height: 0;
+}
+
+.result-video-column {
+  display: flex;
+}
+
+.result-video-card {
+  width: 100%;
+  height: 100%;
+}
+
+.result-video-card .ant-card-body {
+  height: calc(100% - 57px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-video-card .ant-empty {
+  margin: auto;
+}
+
+.input-view-stepper {
+  width: 72px;
+}
+
+.input-view-stepper .ant-input-number-input {
+  text-align: center;
+  font-weight: 600;
+}
+
+.result-video-large {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  border-radius: 8px;
+  background: #000;
+}
+
+.video-uploader-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video-uploader-panel .ant-upload-wrapper,
+.video-uploader-panel .ant-upload,
+.video-uploader-panel .ant-upload-drag {
+  width: 100%;
+  max-width: 100%;
+}
+
+.video-uploader-panel .ant-upload-drag {
+  min-height: 170px;
+  padding: 12px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-uploader-panel .ant-upload-text,
+.video-uploader-panel .ant-upload-hint {
+  margin-bottom: 0;
+  white-space: normal;
+}
+
+.video-uploader-panel .ant-alert,
+.video-uploader-panel .ant-alert-content,
+.video-uploader-panel .ant-alert-description {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.video-uploader-panel .ant-alert-description {
+  overflow-wrap: anywhere;
+}
+
+/* Novel view images grid */
+.novel-view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.novel-view-grid .ant-image {
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.novel-view-grid .ant-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.novel-view-compare-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.novel-view-compare-pair {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.novel-view-compare-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.novel-view-compare-item .ant-image {
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.novel-view-compare-item .ant-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }

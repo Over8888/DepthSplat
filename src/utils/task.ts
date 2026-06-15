@@ -13,10 +13,7 @@ export const formatTimestamp = (value?: string) => (value ? dayjs(value).format(
 
 export const formatDuration = (seconds?: number) => {
   if (seconds == null) return '?';
-  if (seconds < 60) return `${seconds}\u79d2`;
-  const minutes = Math.floor(seconds / 60);
-  const remain = seconds % 60;
-  return `${minutes}\u5206 ${remain}\u79d2`;
+  return `${seconds.toFixed(2)}\u79d2`;
 };
 
 export const buildErrorSummary = (task?: TaskDetail) => {

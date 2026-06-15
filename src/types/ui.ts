@@ -1,10 +1,11 @@
 export interface SettingsState {
   backendBaseUrl: string;
   taskOptions: {
-    testChunkInterval: boolean;
-    saveVideo: boolean;
-    computeScores: boolean;
-    exportDepthMap: boolean;
+    save_video: boolean;
+    save_image: boolean;
+    save_gt_image: boolean;
+    save_input_images: boolean;
+    compute_scores: boolean;
   };
   preferences: {
     autoScrollLogs: boolean;

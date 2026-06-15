@@ -4,25 +4,29 @@ import type { SettingsState } from '@/types/ui';
 interface Props {
   initialValues: SettingsState;
   onSubmit: (values: SettingsState) => void;
+  onChange: (values: SettingsState) => void;
 }
 
-export function SettingsForm({ initialValues, onSubmit }: Props) {
+export function SettingsForm({ initialValues, onSubmit, onChange }: Props) {
   return (
     <Card title={'\u524d\u7aef\u8bbe\u7f6e'}>
-      <Form layout="vertical" initialValues={initialValues} onFinish={onSubmit}>
+      <Form layout="vertical" initialValues={initialValues} onFinish={onSubmit} onValuesChange={(_, values) => onChange(values as SettingsState)}>
         <Form.Item label={'\u540e\u7aef\u57fa\u7840\u5730\u5740'} name="backendBaseUrl" rules={[{ required: true, message: '\u540e\u7aef\u5730\u5740\u4e0d\u80fd\u4e3a\u7a7a' }]}>
           <Input placeholder="http://127.0.0.1:8012" />
         </Form.Item>
-        <Form.Item label={'\u542f\u7528 test_chunk_interval'} name={['taskOptions', 'testChunkInterval']} valuePropName="checked">
+        <Form.Item label={'save_video'} name={['taskOptions', 'save_video']} valuePropName="checked">
           <Switch />
         </Form.Item>
-        <Form.Item label={'\u542f\u7528 save_video'} name={['taskOptions', 'saveVideo']} valuePropName="checked">
+        <Form.Item label={'save_image'} name={['taskOptions', 'save_image']} valuePropName="checked">
           <Switch />
         </Form.Item>
-        <Form.Item label={'\u542f\u7528 compute_scores'} name={['taskOptions', 'computeScores']} valuePropName="checked">
+        <Form.Item label={'save_gt_image'} name={['taskOptions', 'save_gt_image']} valuePropName="checked">
           <Switch />
         </Form.Item>
-        <Form.Item label={'\u5bfc\u51fa\u6df1\u5ea6\u56fe'} name={['taskOptions', 'exportDepthMap']} valuePropName="checked">
+        <Form.Item label={'save_input_images'} name={['taskOptions', 'save_input_images']} valuePropName="checked">
+          <Switch />
+        </Form.Item>
+        <Form.Item label={'compute_scores'} name={['taskOptions', 'compute_scores']} valuePropName="checked">
           <Switch />
         </Form.Item>
         <Form.Item label={'\u65e5\u5fd7\u81ea\u52a8\u6eda\u52a8'} name={['preferences', 'autoScrollLogs']} valuePropName="checked">

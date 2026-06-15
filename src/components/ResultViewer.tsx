@@ -47,25 +47,20 @@ export function ResultViewer({ task, result, loading, mode }: Props) {
           </Col>
           <Col xs={24} lg={12}>
             <Typography.Title level={5}>{'\u6df1\u5ea6\u56fe'}</Typography.Title>
-            <Image.PreviewGroup>
-              <div className="image-wall">
-                {(result.depthImages ?? []).map((url) => (
-                  <Image key={url} src={url} alt="depth" />
-                ))}
-              </div>
-            </Image.PreviewGroup>
+            {result.depthImages?.length ? (
+              <Image.PreviewGroup>
+                <div className="image-wall">
+                  {result.depthImages.map((url) => (
+                    <Image key={url} src={url} alt="depth" />
+                  ))}
+                </div>
+              </Image.PreviewGroup>
+            ) : (
+              <Empty description={'\u6682\u65e0\u6df1\u5ea6\u56fe'} />
+            )}
           </Col>
           <Col xs={24} lg={12}>
-            <Card size="small" title={'\u53c2\u6570'}>
-              <Descriptions column={1} size="small">
-                {Object.entries(result.parameters ?? task?.parameters ?? {}).map(([key, value]) => (
-                  <Descriptions.Item key={key} label={key}>
-                    {String(value)}
-                  </Descriptions.Item>
-                ))}
-              </Descriptions>
-            </Card>
-            <Card size="small" title={'\u6307\u6807'} style={{ marginTop: 16 }}>
+            <Card size="small" title={'\u6307\u6807'}>
               {!result.metrics?.length ? (
                 <Empty description={'\u6682\u65e0\u6307\u6807\u6570\u636e'} />
               ) : (

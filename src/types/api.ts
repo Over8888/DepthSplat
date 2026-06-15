@@ -5,7 +5,10 @@ export type BackendTaskState =
   | 'postprocessing'
   | 'success'
   | 'failed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'missing';
+
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type UiTaskState = BackendTaskState | 'submitting' | 'loading' | 'cancelling';
 
@@ -18,6 +21,9 @@ export interface SampleItem {
   tags?: string[];
   inputImages?: string[];
   previewImages?: string[];
+  sceneNumber?: string | number;
+  inputViewCount?: number;
+  targetViewCount?: number;
 }
 
 export interface PresetScriptItem {
@@ -26,22 +32,25 @@ export interface PresetScriptItem {
   description?: string;
   checkpoint?: string;
   contextViews?: number;
+  targetViews?: number;
   imageShape?: [number, number] | number[];
   sampleId?: string;
 }
 
 export interface TaskOptions {
-  testChunkInterval: boolean;
-  saveVideo: boolean;
-  computeScores: boolean;
-  exportDepthMap: boolean;
+  save_video: boolean;
+  save_image: boolean;
+  save_gt_image: boolean;
+  save_input_images: boolean;
+  compute_scores: boolean;
 }
 
 export interface CreateTaskFormData {
   sampleId?: string;
-  presetId?: string;
-  images: File[];
-  options: TaskOptions;
+  preset?: string;
+  inputViewCount?: number;
+  video?: File;
+  options?: TaskOptions;
 }
 
 export interface CreateTaskResponse {
@@ -56,6 +65,14 @@ export interface TaskStageTiming {
   finishedAt?: string;
   durationSeconds?: number;
   updatedAt?: string;
+  dataLoadSeconds?: number;
+  dataPrepSeconds?: number;
+  inferenceSeconds?: number;
+  splatConversionSeconds?: number;
+  renderSeconds?: number;
+  postprocessSeconds?: number;
+  scoreSeconds?: number;
+  exportSeconds?: number;
 }
 
 export interface TaskErrorSummary {
@@ -76,8 +93,12 @@ export interface TaskDetail {
   updatedAt?: string;
   submittedAt?: string;
   timings?: TaskStageTiming;
-  parameters?: Record<string, string | number | boolean | null | undefined>;
+  parameters?: Record<string, JsonValue | undefined>;
+  cameraIntrinsics?: JsonValue;
+  cameraExtrinsics?: JsonValue;
   inputImages?: string[];
+  renderedImages?: string[];
+  gtImages?: string[];
   error?: TaskErrorSummary;
 }
 
@@ -93,6 +114,14 @@ export interface TaskLogsResponse {
   entries: TaskLogEntry[];
 }
 
+export interface TaskScores {
+  psnr?: number;
+  ssim?: number;
+  lpips?: number;
+  mean_pmr?: number;
+  total_seconds?: number;
+}
+
 export interface TaskMetric {
   label: string;
   value: string | number;
@@ -104,10 +133,20 @@ export interface TaskResult {
   state: BackendTaskState;
   inputImages?: string[];
   videoUrl?: string;
+  splatUrl?: string;
   depthImages?: string[];
+  renderedImages?: string[];
+  gtImages?: string[];
+  errorImages?: string[];
+  comparisonConcatImage?: string;
+  imagesZipUrl?: string;
+  scores?: TaskScores;
+  cameraParamsUrl?: string;
   previewImages?: string[];
   metrics?: TaskMetric[];
-  parameters?: Record<string, string | number | boolean | null | undefined>;
+  parameters?: Record<string, JsonValue | undefined>;
+  cameraIntrinsics?: JsonValue;
+  cameraExtrinsics?: JsonValue;
   notes?: string;
 }
 
@@ -115,6 +154,8 @@ export interface TaskHistoryItem {
   id: string;
   sampleId?: string;
   sampleName?: string;
+  presetId?: string;
+  presetName?: string;
   state: BackendTaskState;
   createdAt?: string;
   updatedAt?: string;
@@ -122,6 +163,23 @@ export interface TaskHistoryItem {
 
 export interface TaskHistoryFilters {
   state?: BackendTaskState | 'all';
-  sampleId?: string;
+  presetId?: string;
   timeRange?: [string, string];
+}
+
+export interface InputImageCameraInfo {
+  url: string;
+  index: number;
+  width?: number;
+  height?: number;
+  isContextView: boolean;
+  participatesInInference: boolean;
+  cameraIntrinsics?: { fx: number; fy: number; cx: number; cy: number };
+  cameraExtrinsics?: { rotation: number[][]; translation: number[] };
+  cameraParamsStatus: 'available' | 'missing' | 'partial';
+}
+
+export interface TaskInputImagesResponse {
+  taskId: string;
+  images: InputImageCameraInfo[];
 }

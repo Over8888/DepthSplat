@@ -1,13 +1,13 @@
-import { Alert, Card, Col, Empty, Row, Space, Typography, message } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { Alert, Col, Row, Space, Typography, message } from 'antd';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CancelBanner } from '@/components/CancelBanner';
+import { IntermediateResults } from '@/components/IntermediateResults';
 import { LogViewer } from '@/components/LogViewer';
-import { ResultViewer } from '@/components/ResultViewer';
 import { TaskControl } from '@/components/TaskControl';
 import { TaskStatusCard } from '@/components/TaskStatusCard';
 import { useCancelTask, useTaskDetail, useTaskLogs, useTaskResult } from '@/hooks/useTask';
-import { buildErrorSummary, canShowPartialResults, isCancelledTask, isFailedTask, isSuccessTask, isTaskTerminal } from '@/utils/task';
+import { buildErrorSummary, isCancelledTask, isFailedTask, isTaskTerminal } from '@/utils/task';
 
 export function TaskDetailPage() {
   const { taskId = '' } = useParams();
@@ -15,7 +15,7 @@ export function TaskDetailPage() {
   const taskQuery = useTaskDetail(taskId);
   const cancelTask = useCancelTask(taskId);
   const task = taskQuery.data;
-  const logsQuery = useTaskLogs(taskId, Boolean(taskId));
+  const logsQuery = useTaskLogs(taskId, task?.state, Boolean(taskId));
   const resultQuery = useTaskResult(taskId, isTaskTerminal(task?.state));
 
   useEffect(() => {
@@ -25,12 +25,6 @@ export function TaskDetailPage() {
       setLocalState('cancelling');
     }
   }, [task?.state, cancelTask.isPending]);
-
-  const resultMode = useMemo(() => {
-    if (isSuccessTask(task?.state)) return 'success' as const;
-    if (isFailedTask(task?.state)) return 'failed' as const;
-    return 'cancelled' as const;
-  }, [task?.state]);
 
   const handleCancel = async () => {
     try {
@@ -61,24 +55,17 @@ export function TaskDetailPage() {
       {isCancelledTask(task?.state) && <CancelBanner />}
       {taskQuery.isError && <Alert type="error" showIcon message={'\u52a0\u8f7d\u4efb\u52a1\u8be6\u60c5\u5931\u8d25'} description={taskQuery.error instanceof Error ? taskQuery.error.message : '\u672a\u77e5\u9519\u8bef'} />}
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} xl={8}>
           <TaskStatusCard task={task} loading={taskQuery.isLoading} localState={localState} />
         </Col>
         <Col xs={24} xl={16}>
-          <LogViewer entries={logsQuery.data?.entries} loading={logsQuery.isLoading || logsQuery.isFetching} />
+          <LogViewer entries={logsQuery.data?.entries} timings={task?.timings} loading={logsQuery.isLoading} refreshing={logsQuery.isFetching && !logsQuery.isLoading} />
         </Col>
       </Row>
 
-      {isSuccessTask(task?.state) && <ResultViewer task={task} result={resultQuery.data} loading={resultQuery.isLoading} mode={resultMode} />}
-      {isFailedTask(task?.state) && <ResultViewer task={task} result={resultQuery.data} loading={resultQuery.isLoading} mode={resultMode} />}
-      {isCancelledTask(task?.state) && canShowPartialResults(task, resultQuery.data) && (
-        <ResultViewer task={task} result={resultQuery.data} loading={resultQuery.isLoading} mode={resultMode} />
-      )}
-      {isCancelledTask(task?.state) && !canShowPartialResults(task, resultQuery.data) && (
-        <Card title={'\u90e8\u5206\u7ed3\u679c'}>
-          <Empty description={'\u8be5\u5df2\u53d6\u6d88\u4efb\u52a1\u6682\u65e0\u540e\u7aef\u8fd4\u56de\u7684\u90e8\u5206\u7ed3\u679c\u3002'} />
-        </Card>
+      {resultQuery.data && (
+        <IntermediateResults task={task} result={resultQuery.data} loading={resultQuery.isLoading} />
       )}
       {isFailedTask(task?.state) && buildErrorSummary(task) && <Typography.Text type="danger">{buildErrorSummary(task)}</Typography.Text>}
     </Space>
