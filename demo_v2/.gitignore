@@ -1,4 +1,4 @@
 outputs/
 backend_1080.log
 backend_6008.log
-app/__pycache__/*
+__pycache__/
